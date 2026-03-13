@@ -1,0 +1,16 @@
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+
+
+def main():
+    from newsstack.server import mcp
+
+    mcp.run(transport="streamable-http")
+
+
+if __name__ == "__main__":
+    main()
