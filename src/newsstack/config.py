@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # SQLite
     db_path: str = "newsstack.db"
 
+    # Feed config
+    feeds_file: str | None = None  # path to YAML; None = packaged feeds.default.yaml
+    gdelt_enabled: bool = True
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8080

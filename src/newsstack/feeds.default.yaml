@@ -1,0 +1,39 @@
+# Default feed set used when NEWSSTACK_FEEDS_FILE is not set.
+# Tenants override by pointing NEWSSTACK_FEEDS_FILE at their own YAML file
+# with the same schema.
+feeds:
+  - id: ap-news
+    name: AP News
+    url: https://feedx.net/rss/ap.xml
+    region: global
+    category: general
+  - id: npr-world
+    name: NPR World
+    url: https://feeds.npr.org/1004/rss.xml
+    region: global
+    category: world
+  - id: nyt-world
+    name: NY Times World
+    url: https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+    region: global
+    category: world
+  - id: bbc-world
+    name: BBC World
+    url: https://feeds.bbci.co.uk/news/world/rss.xml
+    region: global
+    category: world
+  - id: bbc-tech
+    name: BBC Technology
+    url: https://feeds.bbci.co.uk/news/technology/rss.xml
+    region: global
+    category: technology
+  - id: guardian-world
+    name: The Guardian World
+    url: https://www.theguardian.com/world/rss
+    region: global
+    category: world
+  - id: aljazeera
+    name: Al Jazeera
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    region: middle_east
+    category: general

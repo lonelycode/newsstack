@@ -11,6 +11,7 @@ from mcp.server.fastmcp import Context, FastMCP
 
 from newsstack.config import Settings
 from newsstack.db.sqlite import Database
+from newsstack.feeds_loader import sync_feeds_to_db
 from newsstack.processing.embeddings import EmbeddingClient
 from newsstack.processing.ner import NERProcessor
 from newsstack.processing.summarizer import Summarizer
@@ -38,6 +39,7 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppState]:
     # Initialize components
     db = Database(settings.db_path)
     await db.connect()
+    await sync_feeds_to_db(db.conn, settings.feeds_file)
     logger.info("SQLite connected: %s", settings.db_path)
 
     vector_store = VectorStore(settings.qdrant_url, settings.embedding_dim)
@@ -86,10 +88,10 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppState]:
     # Run initial ingestion so data is available immediately
     logger.info("Running initial ingestion...")
     import asyncio
-    await asyncio.gather(
-        ingest_rss(state),
-        ingest_gdelt(state),
-    )
+    initial_jobs = [ingest_rss(state)]
+    if settings.gdelt_enabled:
+        initial_jobs.append(ingest_gdelt(state))
+    await asyncio.gather(*initial_jobs)
     logger.info("Initial ingestion complete")
 
     # Start scheduler for ongoing ingestion

@@ -67,17 +67,6 @@ CREATE TABLE IF NOT EXISTS ingestion_log (
 );
 """
 
-DEFAULT_FEEDS = [
-    ("AP News", "https://feedx.net/rss/ap.xml", "global", "general"),
-    ("NPR World", "https://feeds.npr.org/1004/rss.xml", "global", "world"),
-    ("NY Times World", "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", "global", "world"),
-    ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml", "global", "world"),
-    ("BBC Technology", "https://feeds.bbci.co.uk/news/technology/rss.xml", "global", "technology"),
-    ("The Guardian World", "https://www.theguardian.com/world/rss", "global", "world"),
-    ("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml", "middle_east", "general"),
-]
-
-
 class Database:
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
@@ -89,17 +78,7 @@ class Database:
         await self.db.execute("PRAGMA journal_mode=WAL")
         await self.db.execute("PRAGMA foreign_keys=ON")
         await self.db.executescript(SCHEMA)
-        await self._seed_feeds()
         await self.db.commit()
-
-    async def _seed_feeds(self) -> None:
-        assert self.db is not None
-        for name, url, region, category in DEFAULT_FEEDS:
-            await self.db.execute(
-                """INSERT OR IGNORE INTO feeds (id, name, url, region, category)
-                   VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)""",
-                (name, url, region, category),
-            )
 
     async def close(self) -> None:
         if self.db:

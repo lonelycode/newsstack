@@ -175,10 +175,11 @@ def create_scheduler(state) -> AsyncIOScheduler:
         ingest_rss, "interval", seconds=state.settings.rss_interval,
         args=[state], id="rss_ingestion", name="RSS Ingestion",
     )
-    scheduler.add_job(
-        ingest_gdelt, "interval", seconds=state.settings.gdelt_interval,
-        args=[state], id="gdelt_ingestion", name="GDELT Ingestion",
-    )
+    if state.settings.gdelt_enabled:
+        scheduler.add_job(
+            ingest_gdelt, "interval", seconds=state.settings.gdelt_interval,
+            args=[state], id="gdelt_ingestion", name="GDELT Ingestion",
+        )
     scheduler.add_job(
         cluster_articles, "interval", seconds=state.settings.clustering_interval,
         args=[state], id="clustering", name="Article Clustering",

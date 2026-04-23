@@ -85,21 +85,30 @@ Add to your MCP client config (e.g., Claude Desktop `claude_desktop_config.json`
 
 ### RSS Feeds (fetched every 5 minutes)
 
-| Feed | Category |
-|------|----------|
-| AP News | general |
-| NPR World | world |
-| NY Times World | world |
-| BBC World | world |
-| BBC Technology | technology |
-| The Guardian World | world |
-| Al Jazeera | general |
+Feeds are defined in a YAML file. By default, newsstack ships a global news bundle (AP, NPR, NYT, BBC World, BBC Tech, Guardian World, Al Jazeera) at `src/newsstack/feeds.default.yaml`. To override, set `NEWSSTACK_FEEDS_FILE` to the path of your own YAML file with this schema:
 
-Additional feeds can be added directly to the `feeds` SQLite table.
+```yaml
+feeds:
+  - id: bbc-world              # required, slug ([a-z0-9][a-z0-9_-]*)
+    name: BBC World            # required
+    url: https://feeds.bbci.co.uk/news/world/rss.xml  # required
+    region: global             # optional, default "global", free-form string
+    category: world            # optional, default "general", free-form string
+    enabled: true              # optional, default true
+```
+
+The file is authoritative on every startup:
+
+- new ids are inserted
+- existing ids are updated (name/region/category/enabled)
+- ids no longer in the file are disabled (not deleted — preserves article references)
+- per-row ETag / Last-Modified cache is preserved when the URL is unchanged, and cleared when the URL changes
+
+Bad YAML, malformed URLs, duplicate ids or URLs, or missing required fields all cause startup to fail with a clear error — prefer loud failure over silent partial-load.
 
 ### GDELT (fetched every 10 minutes)
 
-The [GDELT DOC API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) is queried for recent English-language articles. No API key required.
+The [GDELT DOC API](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/) is queried for recent English-language articles. No API key required. Set `NEWSSTACK_GDELT_ENABLED=false` to disable entirely (useful for single-region tenants).
 
 ## Deduplication
 
@@ -132,9 +141,25 @@ All settings are configurable via environment variables with the `NEWSSTACK_` pr
 | `NEWSSTACK_LLM_MODEL` | `qwen3.5` | LLM model name |
 | `NEWSSTACK_QDRANT_URL` | `http://localhost:6333` | Qdrant server URL |
 | `NEWSSTACK_DB_PATH` | `newsstack.db` | SQLite database path |
+| `NEWSSTACK_FEEDS_FILE` | _(packaged default)_ | Path to YAML feed config |
+| `NEWSSTACK_GDELT_ENABLED` | `true` | Toggle GDELT ingestion |
 | `NEWSSTACK_HOST` | `0.0.0.0` | Server bind host |
 | `NEWSSTACK_PORT` | `8080` | Server bind port |
 | `NEWSSTACK_RETENTION_DAYS` | `180` | Data retention window |
+
+### Running a different tenant
+
+Mount your feed config and isolate state:
+
+```bash
+NEWSSTACK_FEEDS_FILE=/etc/newsstack/nz-feeds.yaml \
+NEWSSTACK_GDELT_ENABLED=false \
+NEWSSTACK_DB_PATH=nz.db \
+NEWSSTACK_QDRANT_URL=http://qdrant-nz:6333 \
+uv run python -m newsstack
+```
+
+Two tenants must use different `NEWSSTACK_DB_PATH` and `NEWSSTACK_QDRANT_URL` so their articles and clusters don't bleed together.
 
 ## Resetting data
 
